@@ -2,11 +2,10 @@
 
 import { useEffect } from "react";
 import { useSessionStore } from "@/store/session-store";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { Loader2, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function ExerciseSelector() {
   const exercise = useSessionStore((s) => s.exercise);
@@ -19,6 +18,18 @@ export function ExerciseSelector() {
     loadExercises();
   }, [loadExercises]);
 
+  // Force Bicep Curl as default if it exists in the list and current exercise is different
+  // (We do this on mount/load if exercises are present)
+  useEffect(() => {
+    if (!exercisesLoading && exercises.length > 0) {
+      const bicepCurlExists = exercises.some(ex => ex.id === "bicep-curl");
+      if (bicepCurlExists && exercise.id !== "bicep-curl") {
+        setExercise("bicep-curl");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exercises, exercisesLoading]);
+
   if (exercisesLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -29,46 +40,39 @@ export function ExerciseSelector() {
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-3 landscape:flex-col landscape:flex-nowrap landscape:justify-start">
-      {exercises.map((ex) => (
-        <Card
-          key={ex.id}
-          onClick={() => setExercise(ex.id)}
-          className={cn(
-            "w-40 cursor-pointer transition-colors hover:border-primary",
-            exercise.id === ex.id && "border-primary bg-accent/40"
-          )}
-        >
-          <CardContent className="p-4 text-center">
-            <p className="text-sm font-medium">{ex.name}</p>
-            <p className="text-xs text-muted-foreground">{ex.bodyPart}</p>
-            {ex.tutorialMediaUrl && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="mt-1 h-6 px-2 text-xs"
-                    onClick={(e) => e.stopPropagation()} // don't also select the card
-                  >
-                    <PlayCircle className="mr-1 h-3 w-3" /> Tutorial
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{ex.name} — Tutorial</DialogTitle>
-                  </DialogHeader>
-                  {ex.tutorialMediaType === "video" ? (
-                    <video src={ex.tutorialMediaUrl} controls className="w-full rounded-md" />
-                  ) : (
-                    <img src={ex.tutorialMediaUrl} alt={`${ex.name} tutorial`} className="w-full rounded-md" />
-                  )}
-                </DialogContent>
-              </Dialog>
+    <div className="flex w-full items-center justify-center gap-2">
+      <Select value={exercise.id} onValueChange={setExercise}>
+        <SelectTrigger className="w-64">
+          <SelectValue placeholder="Select an exercise" />
+        </SelectTrigger>
+        <SelectContent>
+          {exercises.map((ex) => (
+            <SelectItem key={ex.id} value={ex.id}>
+              {ex.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {exercise.tutorialMediaUrl && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button size="icon" variant="outline" title="View Tutorial">
+              <PlayCircle className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{exercise.name} — Tutorial</DialogTitle>
+            </DialogHeader>
+            {exercise.tutorialMediaType === "video" ? (
+              <video src={exercise.tutorialMediaUrl} controls className="w-full rounded-md" />
+            ) : (
+              <img src={exercise.tutorialMediaUrl} alt={`${exercise.name} tutorial`} className="w-full rounded-md" />
             )}
-          </CardContent>
-        </Card>
-      ))}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
