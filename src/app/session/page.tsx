@@ -33,6 +33,7 @@ function SessionPageInner() {
   const loadExercises = useSessionStore((s) => s.loadExercises);
   const setExercise = useSessionStore((s) => s.setExercise);
   const exercises = useSessionStore((s) => s.exercises);
+  const exercise = useSessionStore((s) => s.exercise);
 
   useEffect(() => {
     // Kick off the exercise catalog fetch as early as possible (while
@@ -86,6 +87,15 @@ function SessionPageInner() {
               </div>
             )}
             <RepCounterHud />
+            {exercise?.tutorialMediaUrl && (
+              <div className="w-full overflow-hidden rounded-xl border">
+                {exercise.tutorialMediaType === "video" ? (
+                  <video src={exercise.tutorialMediaUrl} autoPlay loop muted playsInline className="w-full" />
+                ) : (
+                  <img src={exercise.tutorialMediaUrl} alt={`${exercise.name} tutorial`} className="w-full" />
+                )}
+              </div>
+            )}
             {isSessionActive && <FinishSessionButton />}
           </div>
 

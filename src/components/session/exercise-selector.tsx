@@ -53,26 +53,6 @@ export function ExerciseSelector() {
           ))}
         </SelectContent>
       </Select>
-
-      {exercise.tutorialMediaUrl && (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button size="icon" variant="outline" title="View Tutorial">
-              <PlayCircle className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{exercise.name} — Tutorial</DialogTitle>
-            </DialogHeader>
-            {exercise.tutorialMediaType === "video" ? (
-              <video src={exercise.tutorialMediaUrl} controls className="w-full rounded-md" />
-            ) : (
-              <img src={exercise.tutorialMediaUrl} alt={`${exercise.name} tutorial`} className="w-full rounded-md" />
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
