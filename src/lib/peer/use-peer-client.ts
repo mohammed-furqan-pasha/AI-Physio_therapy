@@ -66,7 +66,7 @@ export function usePeerClient(): UsePeerClientResult {
           // or landscape) based on how the phone is actually held, instead
           // of forcing a landscape-shaped frame regardless of rotation.
           width: { ideal: 1280 },
-          height: { ideal: 1280 },
+          height: { ideal: 720 },
         },
         audio: false,
       });
