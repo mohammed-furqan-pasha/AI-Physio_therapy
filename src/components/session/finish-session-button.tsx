@@ -1,21 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useSessionStore } from "@/store/session-store";
 import { SessionSummaryPayload } from "@/types/session";
+import { FinishSessionResult } from "@/types/gamification";
+import { FinishSessionModal } from "@/components/session/finish-session-modal";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-/**
- * Per spec: this is the ONLY place in the app that writes to the database.
- * Everything during the live session lives purely in the Zustand store
- * (in-memory). Clicking this fires exactly one POST to /api/sessions.
- */
 export function FinishSessionButton() {
-  const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<FinishSessionResult | null>(null);
 
   const exercise = useSessionStore((s) => s.exercise);
   const reps = useSessionStore((s) => s.reps);
@@ -57,9 +53,8 @@ export function FinishSessionButton() {
         throw new Error(body.error ?? "Failed to save session");
       }
 
-      toast.success(`Session saved — ${reps} reps in ${durationSeconds}s`);
-      resetSession();
-      router.push("/dashboard");
+      const data: FinishSessionResult = await res.json();
+      setResult(data); // opens the modal — no redirect yet
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save session");
     } finally {
@@ -68,21 +63,33 @@ export function FinishSessionButton() {
   }
 
   return (
-    <Button
-      size="lg"
-      variant="destructive"
-      className="w-full max-w-3xl"
-      onClick={handleFinish}
-      disabled={saving || !isSessionActive}
-    >
-      {saving ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Saving...
-        </>
-      ) : (
-        "Finish Session"
+    <>
+      <Button
+        size="lg"
+        variant="destructive"
+        className="w-full max-w-3xl"
+        onClick={handleFinish}
+        disabled={saving || !isSessionActive}
+      >
+        {saving ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          "Finish Session"
+        )}
+      </Button>
+
+      {result && (
+        <FinishSessionModal
+          result={result}
+          onClose={() => {
+            setResult(null);
+            resetSession();
+          }}
+        />
       )}
-    </Button>
+    </>
   );
 }

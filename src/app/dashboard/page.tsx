@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NavCards } from "@/components/dashboard/nav-cards";
 import { Button } from "@/components/ui/button";
-import { FileText, LogOut } from "lucide-react";
+import { FileText, LogOut, UserCircle } from "lucide-react";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 
 export default async function DashboardPage() {
@@ -28,12 +28,21 @@ export default async function DashboardPage() {
 
       <NavCards />
 
-      <Button variant="outline" asChild>
-        <Link href="/report">
-          <FileText className="mr-2 h-4 w-4" />
-          Upload Medical Report
-        </Link>
-      </Button>
+      <div className="flex gap-4">
+        <Button variant="outline" asChild>
+          <Link href="/report">
+            <FileText className="mr-2 h-4 w-4" />
+            Upload Medical Report
+          </Link>
+        </Button>
+
+        <Button variant="outline" asChild>
+          <Link href="/profile">
+            <UserCircle className="mr-2 h-4 w-4" />
+            My Profile
+          </Link>
+        </Button>
+      </div>
     </main>
   );
 }
