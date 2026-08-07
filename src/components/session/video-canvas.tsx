@@ -142,10 +142,10 @@ export function VideoCanvas({ stream }: VideoCanvasProps) {
   }, [stream, exercise, isSessionActive]);
 
   return (
-    <div className="relative w-full max-w-3xl overflow-hidden rounded-xl border bg-black">
+    <div className="relative mx-auto h-[70vh] max-h-[70vh] w-full max-w-full overflow-hidden rounded-xl border bg-black landscape:h-[80vh] landscape:max-h-[80vh] landscape:w-auto">
       <video
         ref={videoRef}
-        className="w-full -scale-x-100 transform"
+        className="h-full w-full -scale-x-100 transform object-contain"
         muted
         playsInline
       />

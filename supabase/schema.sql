@@ -30,3 +30,8 @@ create policy "Users can insert own sessions"
   with check (auth.uid() = user_id);
 
 create index if not exists sessions_user_id_idx on public.sessions (user_id);
+
+alter table public.exercises
+  add column if not exists tutorial_media_url text,
+  add column if not exists tutorial_media_type text
+    check (tutorial_media_type in ('image', 'gif', 'video'));

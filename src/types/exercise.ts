@@ -51,6 +51,8 @@ export interface ExerciseConfig {
   angleThresholds: AngleThresholds;
   /** Optional secondary checks that produce on-screen form warnings. */
   formRules: FormRule[];
+  tutorialMediaUrl?: string;
+  tutorialMediaType?: "image" | "gif" | "video";
 }
 
 /** FSM states for repetition counting, per spec: Ready -> Moving -> Peak Hold -> Returning. */

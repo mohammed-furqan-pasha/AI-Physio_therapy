@@ -4,7 +4,9 @@ import { useEffect } from "react";
 import { useSessionStore } from "@/store/session-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, PlayCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function ExerciseSelector() {
   const exercise = useSessionStore((s) => s.exercise);
@@ -27,7 +29,7 @@ export function ExerciseSelector() {
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-3">
+    <div className="flex flex-wrap justify-center gap-3 landscape:flex-col landscape:flex-nowrap landscape:justify-start">
       {exercises.map((ex) => (
         <Card
           key={ex.id}
@@ -40,6 +42,30 @@ export function ExerciseSelector() {
           <CardContent className="p-4 text-center">
             <p className="text-sm font-medium">{ex.name}</p>
             <p className="text-xs text-muted-foreground">{ex.bodyPart}</p>
+            {ex.tutorialMediaUrl && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="mt-1 h-6 px-2 text-xs"
+                    onClick={(e) => e.stopPropagation()} // don't also select the card
+                  >
+                    <PlayCircle className="mr-1 h-3 w-3" /> Tutorial
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{ex.name} — Tutorial</DialogTitle>
+                  </DialogHeader>
+                  {ex.tutorialMediaType === "video" ? (
+                    <video src={ex.tutorialMediaUrl} controls className="w-full rounded-md" />
+                  ) : (
+                    <img src={ex.tutorialMediaUrl} alt={`${ex.name} tutorial`} className="w-full rounded-md" />
+                  )}
+                </DialogContent>
+              </Dialog>
+            )}
           </CardContent>
         </Card>
       ))}

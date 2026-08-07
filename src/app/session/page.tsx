@@ -55,7 +55,7 @@ function SessionPageInner() {
   }, [preselectedExerciseId, exercises, setExercise]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 p-6 py-10">
+    <main className="flex min-h-screen w-full flex-col items-center gap-6 p-6 py-10">
       <div className="flex w-full max-w-3xl items-center justify-between">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/dashboard">
@@ -75,20 +75,23 @@ function SessionPageInner() {
           </p>
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-4">
-          {!isSessionActive && (
-            <div className="flex flex-col items-center gap-4">
-              <ExerciseSelector />
-              <Button size="lg" onClick={startSession}>
-                Start Tracking
-              </Button>
-            </div>
-          )}
+        <div className="flex w-full max-w-6xl flex-1 gap-6 portrait:flex-col landscape:flex-row landscape:items-start">
+          <div className="flex flex-col items-center gap-4 landscape:w-72 landscape:shrink-0 landscape:items-stretch">
+            {!isSessionActive && (
+              <div className="flex flex-col items-center gap-4 landscape:items-stretch">
+                <ExerciseSelector />
+                <Button size="lg" onClick={startSession}>
+                  Start Tracking
+                </Button>
+              </div>
+            )}
+            <RepCounterHud />
+            {isSessionActive && <FinishSessionButton />}
+          </div>
 
-          <VideoCanvas stream={remoteStream} />
-          <RepCounterHud />
-
-          {isSessionActive && <FinishSessionButton />}
+          <div className="flex flex-1 items-start justify-center">
+            <VideoCanvas stream={remoteStream} />
+          </div>
         </div>
       )}
     </main>

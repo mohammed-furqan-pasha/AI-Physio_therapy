@@ -11,7 +11,7 @@ export async function fetchExercises(): Promise<ExerciseConfig[]> {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("exercises")
-      .select("id, name, config")
+      .select("id, name, config, is_active, tutorial_media_url, tutorial_media_type")
       .eq("is_active", true);
 
     if (error || !data || data.length === 0) {
@@ -22,7 +22,9 @@ export async function fetchExercises(): Promise<ExerciseConfig[]> {
     cachedExercises = data.map((row: any) => ({
       id: row.id,
       name: row.name,
-      ...row.config
+      ...row.config,
+      tutorialMediaUrl: row.tutorial_media_url ?? undefined,
+      tutorialMediaType: row.tutorial_media_type ?? undefined,
     })) as ExerciseConfig[];
     
     return cachedExercises;
