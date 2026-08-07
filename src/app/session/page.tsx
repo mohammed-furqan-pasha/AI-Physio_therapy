@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { usePeerHost } from "@/lib/peer/use-peer-host";
 import { QrDisplay } from "@/components/session/qr-display";
 import { VideoCanvas } from "@/components/session/video-canvas";
@@ -13,11 +14,25 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export default function SessionPage() {
+  // useSearchParams requires a Suspense boundary in the App Router.
+  return (
+    <Suspense fallback={null}>
+      <SessionPageInner />
+    </Suspense>
+  );
+}
+
+function SessionPageInner() {
+  const searchParams = useSearchParams();
+  const preselectedExerciseId = searchParams.get("exercise");
+
   const { peerId, status, remoteStream, error } = usePeerHost();
   const isSessionActive = useSessionStore((s) => s.isSessionActive);
   const startSession = useSessionStore((s) => s.startSession);
   const resetSession = useSessionStore((s) => s.resetSession);
   const loadExercises = useSessionStore((s) => s.loadExercises);
+  const setExercise = useSessionStore((s) => s.setExercise);
+  const exercises = useSessionStore((s) => s.exercises);
 
   useEffect(() => {
     // Kick off the exercise catalog fetch as early as possible (while
@@ -29,6 +44,15 @@ export default function SessionPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // If the user arrived via a report's "Try it" link (/session?exercise=<id>),
+    // preselect that exercise once the catalog has loaded.
+    if (!preselectedExerciseId) return;
+    if (exercises.some((e) => e.id === preselectedExerciseId)) {
+      setExercise(preselectedExerciseId);
+    }
+  }, [preselectedExerciseId, exercises, setExercise]);
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 p-6 py-10">

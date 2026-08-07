@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ParsedReport } from "@/lib/gemini/report-parser";
+import { ParseReportResponse } from "@/types/report";
 import { ReportResult } from "@/components/report/report-result";
 import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
@@ -13,7 +13,7 @@ const ACCEPTED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/web
 export function ReportUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ParsedReport | null>(null);
+  const [result, setResult] = useState<ParseReportResponse | null>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
@@ -46,7 +46,7 @@ export function ReportUpload() {
         throw new Error(body.error ?? "Failed to parse report");
       }
 
-      const parsed: ParsedReport = await res.json();
+      const parsed: ParseReportResponse = await res.json();
       setResult(parsed);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to parse report");

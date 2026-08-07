@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseReportWithGemini } from "@/lib/gemini/report-parser";
+import { matchExtractedExercises } from "@/lib/gemini/exercise-matcher";
 import { fetchExercisesServer } from "@/lib/supabase/exercises-server";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -58,12 +59,24 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const exercises = await fetchExercisesServer();
-
     // NOTE: base64Data is passed straight to Gemini as inline data and is
     // never written to disk or a storage bucket.
-    const result = await parseReportWithGemini(base64Data, mimeType, exercises);
-    return NextResponse.json(result, { status: 200 });
+    const [parsed, exercises] = await Promise.all([
+      parseReportWithGemini(base64Data, mimeType),
+      fetchExercisesServer(),
+    ]);
+
+    // Match every exercise the report actually mentioned against our live
+    // catalog: exact/substring name match first, body-part overlap as a
+    // fallback. Exercises that match neither are still returned (matched:
+    // null) so the UI can show them as "not in our library yet" instead of
+    // silently dropping them.
+    const matchedExercises = matchExtractedExercises(
+      parsed.extractedExercises,
+      exercises
+    );
+
+    return NextResponse.json({ ...parsed, matchedExercises }, { status: 200 });
   } catch (err) {
     console.error("Gemini report parsing failed:", err);
     return NextResponse.json(

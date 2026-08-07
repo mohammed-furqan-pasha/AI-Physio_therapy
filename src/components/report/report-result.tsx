@@ -1,28 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ParsedReport } from "@/lib/gemini/report-parser";
-import { fetchExercises } from "@/lib/supabase/exercises";
-import { ExerciseConfig } from "@/types/exercise";
+import { ParseReportResponse } from "@/types/report";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, HelpCircle } from "lucide-react";
 
-const SEVERITY_COLORS: Record<ParsedReport["severity"], string> = {
+const SEVERITY_COLORS: Record<ParseReportResponse["severity"], string> = {
   Mild: "bg-emerald-600",
   Moderate: "bg-amber-600",
   Severe: "bg-destructive",
 };
 
-export function ReportResult({ report }: { report: ParsedReport }) {
-  const [exercises, setExercises] = useState<ExerciseConfig[] | null>(null);
-
-  useEffect(() => {
-    fetchExercises().then(setExercises);
-  }, []);
-
+export function ReportResult({ report }: { report: ParseReportResponse }) {
   return (
     <Card>
       <CardHeader>
@@ -38,32 +29,44 @@ export function ReportResult({ report }: { report: ParsedReport }) {
         <p className="text-sm text-muted-foreground">{report.summary}</p>
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Recommended exercises</p>
+          <p className="text-sm font-medium">Exercises mentioned in this report</p>
 
-          {!exercises ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading...
-            </div>
+          {!report.matchedExercises || report.matchedExercises.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No specific exercises were named in this report.
+            </p>
           ) : (
             <div className="flex flex-col gap-2">
-              {report.recommendedExerciseIds.map((id) => {
-                const exercise = exercises.find((e) => e.id === id);
-                if (!exercise) return null;
-                return (
-                  <div
-                    key={id}
-                    className="flex items-center justify-between rounded-md border p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{exercise.name}</p>
-                      <p className="text-xs text-muted-foreground">{exercise.bodyPart}</p>
-                    </div>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href="/session">Try it</Link>
-                    </Button>
+              {report.matchedExercises.map((m, idx) => (
+                <div
+                  key={`${m.extracted.name}-${idx}`}
+                  className="flex items-center justify-between rounded-md border p-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{m.extracted.name}</p>
+                    <p className="text-xs text-muted-foreground">{m.extracted.bodyPart}</p>
+                    {m.matched && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {m.matchType === "name"
+                          ? `Matched to "${m.matched.name}"`
+                          : `Matched by body part to "${m.matched.name}"`}
+                      </p>
+                    )}
                   </div>
-                );
-              })}
+
+                  {m.matched ? (
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/session?exercise=${m.matched.id}`}>Try it</Link>
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="gap-1 text-muted-foreground">
+                      <HelpCircle className="h-3 w-3" />
+                      Not in library yet
+                    </Badge>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
