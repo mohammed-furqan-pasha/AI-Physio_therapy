@@ -63,6 +63,10 @@ export function VideoCanvas({ stream }: VideoCanvasProps) {
       const canvas = canvasRef.current;
       if (!canvas || !video) return;
 
+      let lastFsmState = "";
+      let lastReps = -1;
+      let lastWarnings = "";
+
       const loop = () => {
         if (cancelled) return;
 
@@ -112,8 +116,23 @@ export function VideoCanvas({ stream }: VideoCanvasProps) {
                   timestampMs
                 );
 
+                const angleEl = document.getElementById("current-angle-display");
+                if (angleEl) {
+                  angleEl.innerText = `${primaryAngle.toFixed(0)}°`;
+                }
+
                 if (isSessionActive) {
-                  updateFromFsm(snapshot);
+                  const warningsStr = snapshot.formWarnings.join(",");
+                  if (
+                    snapshot.state !== lastFsmState ||
+                    snapshot.reps !== lastReps ||
+                    warningsStr !== lastWarnings
+                  ) {
+                    updateFromFsm(snapshot);
+                    lastFsmState = snapshot.state;
+                    lastReps = snapshot.reps;
+                    lastWarnings = warningsStr;
+                  }
                 }
 
                 drawSkeleton(ctx, smoothed, canvas.width, canvas.height, {
@@ -126,10 +145,18 @@ export function VideoCanvas({ stream }: VideoCanvasProps) {
           }
         }
 
-        rafRef.current = requestAnimationFrame(loop);
+        if ("requestVideoFrameCallback" in video) {
+          (video as any).requestVideoFrameCallback(loop);
+        } else {
+          rafRef.current = requestAnimationFrame(loop);
+        }
       };
 
-      rafRef.current = requestAnimationFrame(loop);
+      if ("requestVideoFrameCallback" in video) {
+        (video as any).requestVideoFrameCallback(loop);
+      } else {
+        rafRef.current = requestAnimationFrame(loop);
+      }
     }
 
     runLoop();

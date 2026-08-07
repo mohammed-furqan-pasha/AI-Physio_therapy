@@ -65,8 +65,9 @@ export function usePeerClient(): UsePeerClientResult {
           // the browser report the camera's natural orientation (portrait
           // or landscape) based on how the phone is actually held, instead
           // of forcing a landscape-shaped frame regardless of rotation.
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 640, max: 1280 },
+          height: { ideal: 480, max: 720 },
+          frameRate: { ideal: 30, max: 30 },
         },
         audio: false,
       });

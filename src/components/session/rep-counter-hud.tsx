@@ -39,7 +39,7 @@ export function RepCounterHud() {
           <Badge className={cn("text-white", STATE_COLORS[fsmState])}>
             {STATE_LABELS[fsmState]}
           </Badge>
-          <p className="text-sm text-muted-foreground tabular-nums">
+          <p id="current-angle-display" className="text-sm text-muted-foreground tabular-nums">
             {currentAngle.toFixed(0)}&deg;
           </p>
         </div>
