@@ -61,7 +61,7 @@ export function ReportUpload() {
         <CardHeader>
           <CardTitle>Upload Medical Report</CardTitle>
           <CardDescription>
-            Upload a PDF or image. It's sent directly to Gemini for analysis
+            Upload a PDF or image. It&apos;s sent directly to Gemini for analysis
             and is never stored.
           </CardDescription>
         </CardHeader>

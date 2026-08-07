@@ -23,7 +23,7 @@ export function QrDisplay({ peerId }: QrDisplayProps) {
       <CardHeader className="text-center">
         <CardTitle>Scan with your phone</CardTitle>
         <CardDescription>
-          Open "Connect Camera" on your phone and scan this code
+          Open &quot;Connect Camera&quot; on your phone and scan this code
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">

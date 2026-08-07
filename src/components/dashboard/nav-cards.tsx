@@ -26,7 +26,7 @@ export function NavCards() {
             <Smartphone className="mb-2 h-8 w-8 text-primary" />
             <CardTitle>Connect Camera</CardTitle>
             <CardDescription>
-              Use this phone as the camera sensor. Scan your laptop's QR code
+              Use this phone as the camera sensor. Scan your laptop&apos;s QR code
               to start streaming.
             </CardDescription>
           </CardHeader>

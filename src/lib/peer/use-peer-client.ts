@@ -52,7 +52,15 @@ export function usePeerClient(): UsePeerClientResult {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: 1280, height: 720 },
+        video: {
+          facingMode: "environment",
+          // Use `ideal` rather than hard-locking width/height — this lets
+          // the browser report the camera's natural orientation (portrait
+          // or landscape) based on how the phone is actually held, instead
+          // of forcing a landscape-shaped frame regardless of rotation.
+          width: { ideal: 1280 },
+          height: { ideal: 1280 },
+        },
         audio: false,
       });
       setLocalStream(stream);
