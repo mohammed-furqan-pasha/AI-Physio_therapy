@@ -26,6 +26,7 @@ export function usePeerClient(): UsePeerClientResult {
 
   const peerRef = useRef<Peer | null>(null);
   const callRef = useRef<MediaConnection | null>(null);
+  const isConnectingRef = useRef(false);
 
   useEffect(() => {
     const options = buildPeerOptions();
@@ -47,10 +48,16 @@ export function usePeerClient(): UsePeerClientResult {
   }, []);
 
   const connectToHost = useCallback(async (hostPeerId: string) => {
+    if (isConnectingRef.current) return;
+    isConnectingRef.current = true;
+    
     setStatus("connecting");
     setError(null);
 
     try {
+      // Delay to ensure the QR scanner's camera track releases the hardware completely on mobile
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
@@ -99,6 +106,8 @@ export function usePeerClient(): UsePeerClientResult {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to access camera");
       setStatus("error");
+    } finally {
+      isConnectingRef.current = false;
     }
   }, []);
 
