@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseReportWithGemini } from "@/lib/gemini/report-parser";
+import { fetchExercisesServer } from "@/lib/supabase/exercises-server";
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
@@ -57,9 +58,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const exercises = await fetchExercisesServer();
+
     // NOTE: base64Data is passed straight to Gemini as inline data and is
     // never written to disk or a storage bucket.
-    const result = await parseReportWithGemini(base64Data, mimeType);
+    const result = await parseReportWithGemini(base64Data, mimeType, exercises);
     return NextResponse.json(result, { status: 200 });
   } catch (err) {
     console.error("Gemini report parsing failed:", err);

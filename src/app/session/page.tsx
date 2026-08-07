@@ -17,8 +17,13 @@ export default function SessionPage() {
   const isSessionActive = useSessionStore((s) => s.isSessionActive);
   const startSession = useSessionStore((s) => s.startSession);
   const resetSession = useSessionStore((s) => s.resetSession);
+  const loadExercises = useSessionStore((s) => s.loadExercises);
 
   useEffect(() => {
+    // Kick off the exercise catalog fetch as early as possible (while
+    // waiting for the phone to connect) so it's ready by the time the
+    // user reaches the exercise picker.
+    loadExercises();
     return () => {
       resetSession();
     };

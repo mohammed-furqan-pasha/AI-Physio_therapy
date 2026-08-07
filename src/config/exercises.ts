@@ -15,7 +15,7 @@ import { ExerciseConfig } from "@/types/exercise";
  * validated.
  */
 
-export const EXERCISES: ExerciseConfig[] = [
+export const FALLBACK_EXERCISES: ExerciseConfig[] = [
   {
     id: "bicep-curl",
     name: "Bicep Curl",
@@ -87,8 +87,4 @@ export const EXERCISES: ExerciseConfig[] = [
   },
 ];
 
-export function getExerciseById(id: string): ExerciseConfig | undefined {
-  return EXERCISES.find((e) => e.id === id);
-}
-
-export const DEFAULT_EXERCISE_ID = EXERCISES[0].id;
+export const DEFAULT_EXERCISE_ID = FALLBACK_EXERCISES[0].id;
