@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePeerHost } from "@/lib/peer/use-peer-host";
+import { useLocalCamera } from "@/lib/peer/use-local-camera";
 import { QrDisplay } from "@/components/session/qr-display";
 import { VideoCanvas } from "@/components/session/video-canvas";
 import { RepCounterHud } from "@/components/session/rep-counter-hud";
@@ -11,7 +12,7 @@ import { ExerciseSelector } from "@/components/session/exercise-selector";
 import { useSessionStore } from "@/store/session-store";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Webcam } from "lucide-react";
 
 export default function SessionPage() {
   // useSearchParams requires a Suspense boundary in the App Router.
@@ -27,6 +28,8 @@ function SessionPageInner() {
   const preselectedExerciseId = searchParams.get("exercise");
 
   const { peerId, status, remoteStream, error } = usePeerHost();
+  const { localStream, error: localCameraError, starting: startingLocalCamera, start: startLocalCamera, stop: stopLocalCamera } = useLocalCamera();
+
   const isSessionActive = useSessionStore((s) => s.isSessionActive);
   const startSession = useSessionStore((s) => s.startSession);
   const resetSession = useSessionStore((s) => s.resetSession);
@@ -42,6 +45,7 @@ function SessionPageInner() {
     loadExercises();
     return () => {
       resetSession();
+      stopLocalCamera();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -55,6 +59,10 @@ function SessionPageInner() {
     }
   }, [preselectedExerciseId, exercises, setExercise]);
 
+  const activeStream = localStream ?? remoteStream;
+  const isPeerConnected = status === "connected" && !!remoteStream;
+  const isConnected = !!activeStream;
+
   return (
     <main className="flex min-h-screen w-full flex-col items-center gap-6 p-6 py-10">
       <div className="flex w-full max-w-3xl items-center justify-between">
@@ -67,13 +75,34 @@ function SessionPageInner() {
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
 
-      {!remoteStream || status !== "connected" ? (
+      {!isConnected ? (
         <div className="flex flex-col items-center gap-6">
           <QrDisplay peerId={peerId} />
           <p className="text-sm text-muted-foreground">
             {status === "waiting_for_peer" && "Waiting for your phone to connect..."}
             {status === "connecting" && "Connecting..."}
           </p>
+
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px w-10 bg-white/15" />
+              or
+              <span className="h-px w-10 bg-white/15" />
+            </div>
+            <Button
+              variant="outline"
+              onClick={startLocalCamera}
+              disabled={startingLocalCamera}
+            >
+              <Webcam className="mr-2 h-4 w-4" />
+              {startingLocalCamera ? "Starting camera..." : "Use this laptop's camera instead (solo mode)"}
+            </Button>
+            <p className="max-w-xs text-center text-xs text-muted-foreground">
+              Skips the phone entirely — good for a quick demo or if you&apos;re alone.
+              Position your laptop so your full body is visible.
+            </p>
+            {localCameraError && <p className="text-xs text-destructive">{localCameraError}</p>}
+          </div>
         </div>
       ) : (
         <div className="flex w-full max-w-6xl flex-1 gap-6 portrait:flex-col landscape:flex-row landscape:items-start">
@@ -101,7 +130,7 @@ function SessionPageInner() {
           </div>
 
           <div className="flex flex-1 items-start justify-center">
-            <VideoCanvas stream={remoteStream} />
+            <VideoCanvas stream={activeStream} />
           </div>
         </div>
       )}
