@@ -6,6 +6,8 @@ import { CalendarDay } from "@/types/gamification";
  * Fetches all of the user's sessions from the last 365 days and groups them
  * by date, for the activity heatmap.
  */
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const supabase = createClient();
   const {

@@ -16,6 +16,7 @@ interface SessionState {
   formWarnings: string[];
   /** Union of every distinct warning message seen this session, for the summary POST. */
   formWarningsEncountered: Set<string>;
+  repTimestamps: number[];
   sessionStartedAt: number | null;
   isSessionActive: boolean;
 
@@ -46,6 +47,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   maxAngleThisSession: 0,
   formWarnings: [],
   formWarningsEncountered: new Set(),
+  repTimestamps: [],
   sessionStartedAt: null,
   isSessionActive: false,
 
@@ -75,7 +77,24 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   updateFromFsm: (snapshot) => {
     const encountered = get().formWarningsEncountered;
-    snapshot.formWarnings.forEach((w) => encountered.add(w));
+    let encounteredChanged = false;
+    snapshot.formWarnings.forEach((w) => {
+      if (!encountered.has(w)) {
+        encountered.add(w);
+        encounteredChanged = true;
+      }
+    });
+
+    const prevReps = get().reps;
+    const currentTimestamps = get().repTimestamps;
+    let nextTimestamps = currentTimestamps;
+    
+    if (snapshot.reps > prevReps) {
+      nextTimestamps = [...currentTimestamps];
+      for (let i = 0; i < snapshot.reps - prevReps; i++) {
+        nextTimestamps.push(Date.now());
+      }
+    }
 
     set({
       fsmState: snapshot.state,
@@ -86,7 +105,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         snapshot.maxAngleThisRep
       ),
       formWarnings: snapshot.formWarnings,
-      formWarningsEncountered: new Set(encountered),
+      formWarningsEncountered: encounteredChanged ? new Set(encountered) : encountered,
+      repTimestamps: nextTimestamps,
     });
   },
 
@@ -98,6 +118,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       maxAngleThisSession: 0,
       formWarnings: [],
       formWarningsEncountered: new Set(),
+      repTimestamps: [],
       fsmState: "ready",
     });
   },
@@ -110,6 +131,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       maxAngleThisSession: 0,
       formWarnings: [],
       formWarningsEncountered: new Set(),
+      repTimestamps: [],
       sessionStartedAt: null,
       isSessionActive: false,
     });

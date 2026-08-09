@@ -7,6 +7,11 @@ interface ProfileRow {
   longest_streak: number;
   last_session_date: string | null;
   level: number;
+  age: number | null;
+  guardian_name: string | null;
+  guardian_relation: string | null;
+  guardian_phone: string | null;
+  guardian_email: string | null;
 }
 
 export async function fetchProfile(): Promise<ProfileStats | null> {
@@ -18,7 +23,7 @@ export async function fetchProfile(): Promise<ProfileStats | null> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("xp_total, current_streak, longest_streak, last_session_date, level")
+    .select("xp_total, current_streak, longest_streak, last_session_date, level, age, guardian_name, guardian_relation, guardian_phone, guardian_email")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -31,5 +36,10 @@ export async function fetchProfile(): Promise<ProfileStats | null> {
     longestStreak: row.longest_streak,
     lastSessionDate: row.last_session_date,
     level: row.level,
+    age: row.age,
+    guardianName: row.guardian_name,
+    guardianRelation: row.guardian_relation,
+    guardianPhone: row.guardian_phone,
+    guardianEmail: row.guardian_email,
   };
 }

@@ -4,6 +4,19 @@ export interface ProfileStats {
   longestStreak: number;
   lastSessionDate: string | null; // "YYYY-MM-DD"
   level: number;
+  age?: number | null;
+  guardianName?: string | null;
+  guardianRelation?: string | null;
+  guardianPhone?: string | null;
+  guardianEmail?: string | null;
+}
+
+export interface GuardianInfo {
+  age: number | null;
+  guardianName: string | null;
+  guardianRelation: string | null;
+  guardianPhone: string | null;
+  guardianEmail: string | null;
 }
 
 export interface FinishSessionResult {

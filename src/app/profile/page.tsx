@@ -3,23 +3,33 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchProfile } from "@/lib/supabase/profile";
+import { fetchProfileFullStats } from "@/lib/supabase/session-stats";
 import { levelProgress } from "@/lib/gamification/xp";
-import { ProfileStats } from "@/types/gamification";
+import { ProfileStats, GuardianInfo } from "@/types/gamification";
+import { ProfileFullStats } from "@/types/profile-stats";
 import { ActivityHeatmap } from "@/components/profile/activity-heatmap";
+import { StatsGrid } from "@/components/profile/stats-grid";
+import { WeeklyActivityChart } from "@/components/profile/weekly-activity-chart";
+import { ExerciseBreakdown } from "@/components/profile/exercise-breakdown";
+import { PainRangeBreakdown } from "@/components/profile/pain-range-breakdown";
+import { RecentSessionsList } from "@/components/profile/recent-sessions-list";
+import { GuardianCareCard } from "@/components/profile/guardian-care-card";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Flame, Trophy, Zap } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Flame, Loader2, Trophy, Zap } from "lucide-react";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileStats | null>(null);
+  const [stats, setStats] = useState<ProfileFullStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProfile()
-      .then(setProfile)
-      .finally(() => setLoading(false));
+    Promise.all([fetchProfile(), fetchProfileFullStats()]).then(([p, s]) => {
+      setProfile(p);
+      setStats(s);
+      setLoading(false);
+    });
   }, []);
 
   return (
@@ -41,11 +51,30 @@ export default function ProfilePage() {
         <div className="flex w-full max-w-3xl flex-col gap-6">
           <ProfileHeader profile={profile} />
 
+          {stats && <StatsGrid stats={stats} />}
+
+          <WeeklyActivityChart />
+
+          {stats && <ExerciseBreakdown entries={stats.exerciseBreakdown} />}
+
+          {stats && <PainRangeBreakdown ranges={stats.painRangeBreakdown} />}
+
+          <GuardianCareCard
+            info={{
+              age: profile.age ?? null,
+              guardianName: profile.guardianName ?? null,
+              guardianRelation: profile.guardianRelation ?? null,
+              guardianPhone: profile.guardianPhone ?? null,
+              guardianEmail: profile.guardianEmail ?? null,
+            }}
+            onSaved={(info) => setProfile({ ...profile, ...info })}
+          />
+
+          {stats && <RecentSessionsList sessions={stats.recentSessions} />}
+
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Activity — last 365 days</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
+              <p className="mb-4 text-base font-semibold">Activity — last 365 days</p>
               <ActivityHeatmap />
             </CardContent>
           </Card>
@@ -56,7 +85,7 @@ export default function ProfilePage() {
 }
 
 function ProfileHeader({ profile }: { profile: ProfileStats }) {
-  const { level, currentLevelXp, nextLevelXp, progress } = levelProgress(profile.xpTotal);
+  const { level, progress } = levelProgress(profile.xpTotal);
 
   return (
     <Card>
@@ -66,11 +95,7 @@ function ProfileHeader({ profile }: { profile: ProfileStats }) {
             <Trophy className="h-6 w-6 text-amber-500" />
             <div>
               <p className="text-2xl font-bold">Level {level}</p>
-              <p className="text-xs text-muted-foreground">
-                {nextLevelXp !== null
-                  ? `${Math.round(progress * 100)}% to level ${level + 1}`
-                  : "Max level reached"}
-              </p>
+              <p className="text-xs text-muted-foreground">{Math.round(progress * 100)}% to level {level + 1}</p>
             </div>
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">

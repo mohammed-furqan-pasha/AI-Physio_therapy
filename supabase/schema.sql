@@ -12,7 +12,11 @@ create table if not exists public.sessions (
   max_angle numeric not null default 0,
   form_warnings_encountered text[] not null default '{}',
   completed_at timestamptz not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  pain_level integer check (pain_level between 0 and 10),
+  set_count integer,
+  reps_per_minute numeric,
+  pace_category text check (pace_category in ('slow', 'moderate', 'fast'))
 );
 
 alter table public.sessions enable row level security;

@@ -13,6 +13,8 @@ import { FinishSessionResult } from "@/types/gamification";
  * the client only sends reps/duration/angles; XP is never accepted from
  * the client even if a future payload includes it.
  */
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   const supabase = createClient();
   const {
@@ -38,6 +40,10 @@ export async function POST(request: NextRequest) {
     maxAngle,
     formWarningsEncountered,
     completedAt,
+    painLevel,
+    setCount,
+    repsPerMinute,
+    paceCategory,
   } = payload;
 
   if (
@@ -46,7 +52,11 @@ export async function POST(request: NextRequest) {
     typeof totalReps !== "number" ||
     typeof durationSeconds !== "number" ||
     typeof maxAngle !== "number" ||
-    !completedAt
+    !completedAt ||
+    typeof painLevel !== "number" || painLevel < 0 || painLevel > 10 ||
+    typeof setCount !== "number" ||
+    typeof repsPerMinute !== "number" ||
+    !["slow", "moderate", "fast"].includes(paceCategory)
   ) {
     return NextResponse.json(
       { error: "Missing or invalid session summary fields" },
@@ -84,6 +94,10 @@ export async function POST(request: NextRequest) {
         max_angle: maxAngle,
         form_warnings_encountered: formWarningsEncountered ?? [],
         completed_at: completedAt,
+        pain_level: painLevel,
+        set_count: setCount,
+        reps_per_minute: repsPerMinute,
+        pace_category: paceCategory,
         xp_earned: xpEarned,
       })
       .select()

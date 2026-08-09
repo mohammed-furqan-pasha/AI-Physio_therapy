@@ -14,6 +14,10 @@ export interface SessionSummaryPayload {
   /** Distinct form warnings encountered during the session. */
   formWarningsEncountered: string[];
   completedAt: string; // ISO timestamp
+  painLevel: number; // 0-10, required — always captured before save
+  setCount: number;
+  repsPerMinute: number;
+  paceCategory: "slow" | "moderate" | "fast";
 }
 
 export interface SessionRecord extends SessionSummaryPayload {
