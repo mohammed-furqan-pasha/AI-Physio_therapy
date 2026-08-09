@@ -4,26 +4,24 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 40% 14%;
+    --card-foreground: 210 40% 98%;
+    --primary: 168 76% 42%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 217 33% 22%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 20%;
+    --muted-foreground: 215 20% 75%;
+    --accent: 168 76% 42%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 58%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --border: 210 40% 98% / 0.14;
+    --input: 210 40% 98% / 0.12;
+    --ring: 168 76% 42%;
+    --radius: 1.25rem;
   }
 }
 
@@ -32,6 +30,21 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-transparent text-foreground;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply rounded-3xl border border-white/15 bg-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl;
+  }
+  .glass-panel-solid {
+    @apply rounded-3xl border border-white/15 bg-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-2xl;
+  }
+  .glass-input {
+    @apply rounded-xl border border-white/15 bg-white/10 backdrop-blur-md placeholder:text-white/40;
+  }
+  .text-glow {
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
   }
 }

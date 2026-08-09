@@ -5,19 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        default:
+          "bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-lg shadow-teal-500/20 hover:from-teal-300 hover:to-emerald-400",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-red-500/90 text-white shadow-lg shadow-red-500/20 hover:bg-red-500 backdrop-blur-sm",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-white/20 bg-white/5 text-white backdrop-blur-md hover:bg-white/15",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-white/10 bg-white/10 text-white backdrop-blur-md hover:bg-white/20",
+        ghost: "text-white hover:bg-white/10",
+        link: "text-teal-300 underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",
