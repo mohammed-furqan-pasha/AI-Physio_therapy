@@ -11,10 +11,13 @@ export function NavCards() {
         <Card className="h-full transition-colors hover:border-primary hover:bg-accent/40">
           <CardHeader>
             <Monitor className="mb-2 h-8 w-8 text-primary" />
+            <span className="mb-1 w-fit rounded-full bg-teal-400/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-teal-300">
+              AR display · Laptop
+            </span>
             <CardTitle>Start Exercise Session</CardTitle>
             <CardDescription>
-              Use this laptop as your AR display. Generates a QR code, waits
-              for your phone to connect, then tracks reps live.
+              Use this laptop as your AR display. Generates a QR code, waits for your
+              phone to connect, then tracks reps live.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -24,10 +27,13 @@ export function NavCards() {
         <Card className="h-full transition-colors hover:border-primary hover:bg-accent/40">
           <CardHeader>
             <Smartphone className="mb-2 h-8 w-8 text-primary" />
+            <span className="mb-1 w-fit rounded-full bg-teal-400/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-teal-300">
+              Motion sensor · Phone
+            </span>
             <CardTitle>Connect Camera</CardTitle>
             <CardDescription>
-              Use this phone as the camera sensor. Scan your laptop&apos;s QR code
-              to start streaming.
+              Use this phone as the camera sensor. Scan your laptop&apos;s QR code to start
+              streaming.
             </CardDescription>
           </CardHeader>
         </Card>
