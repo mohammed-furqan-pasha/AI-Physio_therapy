@@ -92,6 +92,7 @@ function SessionPageInner() {
                 {exercise.tutorialMediaType === "video" ? (
                   <video src={exercise.tutorialMediaUrl} autoPlay loop muted playsInline className="w-full" preload="metadata" />
                 ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={exercise.tutorialMediaUrl} alt={`${exercise.name} tutorial`} className="w-full" loading="lazy" decoding="async" />
                 )}
               </div>

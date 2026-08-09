@@ -42,7 +42,7 @@ export function HowItWorks() {
           ))}
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
-          Tip: You can also do this solo on one device — just point your laptop's own webcam at
+          Tip: You can also do this solo on one device — just point your laptop&apos;s own webcam at
           yourself and skip the phone-connect step, though a second device gives a better wide-angle view.
         </p>
       </CardContent>
