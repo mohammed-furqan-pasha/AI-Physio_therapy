@@ -2,59 +2,58 @@ import { AngleThresholds, FormRule, RepState, RepCounterSnapshot } from "@/types
 import { angleToProgress } from "@/lib/geometry/angles";
 
 /**
- * Rep-counting Finite State Machine.
+ * Rep-counting Finite State Machine — tuned for a middle ground between
+ * "too strict" (missing legitimate partial reps) and "too loose" (firing
+ * multiple reps from a single noisy frame).
  *
- * States:
- *  ready      -> angle sits near minAngle (resting position)
- *  moving     -> angle progressing from minAngle toward maxAngle
- *  peak_hold  -> angle has reached maxAngle and must stay there for peakHoldMs
- *  returning  -> angle progressing back from maxAngle toward minAngle
- *
- * A rep is only counted when the full ready -> moving -> peak_hold -> returning
- * -> ready cycle completes. This avoids double-counting from noisy threshold
- * toggling near the boundaries (the failure mode of simple threshold FSMs).
- *
- * Angle direction (increasing or decreasing from min to max) is handled
- * generically via `angleToProgress`, which normalizes to a 0-1 range
- * regardless of whether minAngle > maxAngle or vice versa.
+ * Key behaviors:
+ *  - PEAK_TRIGGER_FRACTION is intentionally lenient (~55% of the exercise's
+ *    full angle range) so a half-effort rep still counts — full range of
+ *    motion is not required.
+ *  - Both the "reached peak" and "returned to ready" transitions require a
+ *    short DEBOUNCE window of consecutive frames in that zone before being
+ *    confirmed — a single jittery frame crossing the line does not, by
+ *    itself, trigger a state change.
+ *  - REFRACTORY_MS enforces a minimum gap between two counted reps, since
+ *    no real rep can complete faster than that — this is the main defense
+ *    against "fires continuously" from landmark noise.
  */
+
+const PEAK_TRIGGER_FRACTION = 0.55; // reach ~55% of the way = counts as a peak
+const READY_TRIGGER_FRACTION = 0.25; // back within ~25% of start = counts as returned
+const PEAK_DEBOUNCE_MS = 100;
+const READY_DEBOUNCE_MS = 120;
+const REFRACTORY_MS = 400;
+
 export class RepCounterFSM {
   private state: RepState = "ready";
   private reps = 0;
   private maxAngleThisRep = 0;
-  private peakEnteredAt: number | null = null;
   private formWarnings: Set<string> = new Set();
 
-  // Progress-space bands, derived from the tolerance/(range) ratio so behavior
-  // scales correctly whether the exercise's angle range is 20deg or 150deg.
+  private peakCandidateSince: number | null = null;
+  private readyCandidateSince: number | null = null;
+  private lastRepCountedAt: number | null = null;
+
   private readonly readyBand: number;
   private readonly peakBand: number;
 
   constructor(private thresholds: AngleThresholds) {
-    const range = Math.abs(thresholds.maxAngle - thresholds.minAngle) || 1;
-    const toleranceFraction = Math.min(0.4, thresholds.tolerance / range);
-    this.readyBand = toleranceFraction;
-    this.peakBand = 1 - toleranceFraction;
+    // thresholds.tolerance is intentionally NOT used to size these bands
+    // anymore — for small angle-range exercises (e.g. neck side bend) a
+    // tolerance-derived band was too tight and caused both missed reps and
+    // noise-driven false triggers. Fixed fractions + debounce are more
+    // stable across exercises with very different ranges.
+    this.readyBand = READY_TRIGGER_FRACTION;
+    this.peakBand = PEAK_TRIGGER_FRACTION;
   }
 
-  /**
-   * Feed a new (already One-Euro-filtered) primary angle reading, plus any
-   * form-check readings, and get back the current FSM snapshot.
-   *
-   * @param angle current primary joint angle (degrees)
-   * @param formChecks array of { rule, angle } for secondary form validation
-   * @param timestampMs current time (performance.now())
-   */
   update(
     angle: number,
     formChecks: { rule: FormRule; angle: number }[],
     timestampMs: number
   ): RepCounterSnapshot {
-    const progress = angleToProgress(
-      angle,
-      this.thresholds.minAngle,
-      this.thresholds.maxAngle
-    );
+    const progress = angleToProgress(angle, this.thresholds.minAngle, this.thresholds.maxAngle);
 
     this.evaluateFormRules(formChecks);
 
@@ -68,38 +67,52 @@ export class RepCounterFSM {
 
       case "moving":
         this.maxAngleThisRep = this.pickExtremum(this.maxAngleThisRep, angle);
+
         if (progress >= this.peakBand) {
-          this.state = "peak_hold";
-          this.peakEnteredAt = timestampMs;
-        } else if (progress < this.readyBand) {
-          // Bounced back before reaching peak — reset to ready, no rep counted.
-          this.state = "ready";
+          if (this.peakCandidateSince === null) {
+            this.peakCandidateSince = timestampMs;
+          } else if (timestampMs - this.peakCandidateSince >= PEAK_DEBOUNCE_MS) {
+            this.state = "peak_hold";
+            this.peakCandidateSince = null;
+          }
+        } else {
+          this.peakCandidateSince = null; // dipped back down — reset debounce
+          if (progress < this.readyBand) {
+            this.state = "ready"; // bounced back without reaching peak, no rep counted
+          }
         }
         break;
 
       case "peak_hold":
         this.maxAngleThisRep = this.pickExtremum(this.maxAngleThisRep, angle);
         if (progress < this.peakBand) {
-          // Left the peak zone before satisfying hold duration — treat as returning.
-          this.state = "returning";
-          this.peakEnteredAt = null;
-        } else if (
-          this.peakEnteredAt !== null &&
-          timestampMs - this.peakEnteredAt >= this.thresholds.peakHoldMs
-        ) {
           this.state = "returning";
         }
         break;
 
       case "returning":
         if (progress <= this.readyBand) {
-          this.state = "ready";
-          this.reps += 1;
-          this.maxAngleThisRep = 0;
-        } else if (progress >= this.peakBand) {
-          // User pushed back up to peak instead of returning — go back to hold.
-          this.state = "peak_hold";
-          this.peakEnteredAt = timestampMs;
+          if (this.readyCandidateSince === null) {
+            this.readyCandidateSince = timestampMs;
+          } else if (timestampMs - this.readyCandidateSince >= READY_DEBOUNCE_MS) {
+            const canCount =
+              this.lastRepCountedAt === null ||
+              timestampMs - this.lastRepCountedAt >= REFRACTORY_MS;
+
+            if (canCount) {
+              this.reps += 1;
+              this.lastRepCountedAt = timestampMs;
+            }
+
+            this.state = "ready";
+            this.maxAngleThisRep = 0;
+            this.readyCandidateSince = null;
+          }
+        } else {
+          this.readyCandidateSince = null; // bounced back up — reset debounce
+          if (progress >= this.peakBand) {
+            this.state = "peak_hold"; // user pushed back up instead of returning
+          }
         }
         break;
     }
@@ -108,18 +121,8 @@ export class RepCounterFSM {
   }
 
   private pickExtremum(current: number, next: number): number {
-    // "Extremum" here means whichever value is closer to maxAngle, tracked
-    // generically for both increasing and decreasing angle ranges.
-    const currentProgress = angleToProgress(
-      current,
-      this.thresholds.minAngle,
-      this.thresholds.maxAngle
-    );
-    const nextProgress = angleToProgress(
-      next,
-      this.thresholds.minAngle,
-      this.thresholds.maxAngle
-    );
+    const currentProgress = angleToProgress(current, this.thresholds.minAngle, this.thresholds.maxAngle);
+    const nextProgress = angleToProgress(next, this.thresholds.minAngle, this.thresholds.maxAngle);
     return nextProgress > currentProgress ? next : current;
   }
 
@@ -150,7 +153,9 @@ export class RepCounterFSM {
     this.state = "ready";
     this.reps = 0;
     this.maxAngleThisRep = 0;
-    this.peakEnteredAt = null;
+    this.peakCandidateSince = null;
+    this.readyCandidateSince = null;
+    this.lastRepCountedAt = null;
     this.formWarnings.clear();
   }
 }
